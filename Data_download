@@ -1,5 +1,8 @@
 Guide to links to download county-level covariates:
 
+Download Local Unemployment Statistics from: https://www.bls.gov/lau/laucnty{yy}.xlsx
+ where  {yy} is the 2-digit year, eg 22
+
 Download: https://fhfa.gov/hpi/download/annually/hpi_at_bdl_county.xlsx,"FHFA House Price Index  Datasets
 
 Download QWI files from here: 
