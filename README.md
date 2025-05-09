@@ -8,7 +8,7 @@ In this repository you will find:
 
 - County Level AI data
 - A CIP-STEM correspondence file needed to aggregate IPEDS data
-- Files, summarizing QWI, CBP, BEA county GDP data at the yearly-county-NAICS 2 level 
+- Files, summarizing Patents, QCEW,QWI, CBP, BEA county GDP data at the yearly-county-NAICS 2 level 
 
 
 Data Citations:
