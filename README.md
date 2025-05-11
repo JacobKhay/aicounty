@@ -10,6 +10,14 @@ In this repository you will find:
 - A CIP-STEM correspondence file needed to aggregate IPEDS data
 - Files, summarizing Patents, QCEW,QWI, CBP, BEA county GDP data at the yearly-county-NAICS 2 level 
 
+Quick instructions:
+
+0.Create a folder
+1. download all the csv files and follow the Data_download instructions
+2. Run the following files;
+  a. create_county_data
+  b. combine_county_stats
+  c. prepare_final_data
 
 Data Citations:
 
