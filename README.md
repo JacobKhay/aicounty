@@ -13,10 +13,15 @@ In this repository you will find:
 Quick instructions:
 
 0.Create a folder
+
 1. download all the csv files and follow the Data_download instructions
+
 2. Run the following files;
+
   a. create_county_data
+  
   b. combine_county_stats
+  
   c. prepare_final_data
 
 Data Citations:
