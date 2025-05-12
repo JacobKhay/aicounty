@@ -4,32 +4,12 @@ library(fixest)
 library(tidyverse)
 
 county_controls_prelim=read_csv("county_controls_prelim.csv")
-updated_lightcast_county="~/Dropbox/Rotemberg/counties/updated_lightcast_county.xlsx" %>% readxl::read_excel()
+updated_lightcast_county="~/Dropbox/Rotemberg/counties/updated_lightcast_county.csv" %>% read_csv
 
 
+data_ai=updated_lightcast_county %>% rename(FIPS=1,year=4,ai=7,da=6,nads=8)%>% select(1,year,ai,nads)
 
-# drop Connecticut
-
- 
-data_ai="~/Downloads/ai_counties.csv" %>% read_csv()
-# "~/Documents/projects/ai_counties_ex.csv"%>% read_csv() 
-data_ai=data_ai %>% rename(ai=nnai,da=nnda)%>% mutate(state=str_sub(FIPS,1,2),state_year=paste0(state,year)) %>% 
-  mutate(da_intensity=da/nads,ai_intensity=ai/nads,all_intensity=(ai+da)/nads) %>% 
-  group_by(FIPS) %>% mutate(dai_intensity=ai_intensity-lag(ai_intensity),
-                                   dall_intensity=all_intensity-lag(all_intensity),
-                                   dai_intensity3=ai_intensity-lag(ai_intensity,3),
-                                   dall_intensity3=all_intensity-lag(all_intensity,3),
-                            dda_intensity=da_intensity-lag(da_intensity),
-                           dda_intensity3=da_intensity-lag(ai_intensity,3))
-data_ai=data_ai %>% 
-  group_by(FIPS) %>% mutate(lai_intensity=lag(ai_intensity,1),
-                            lall_intensity=lag(all_intensity,1),
-                            lda_intensity=da_intensity-lag(da_intensity,1))
-data_ai=data_ai %>% mutate(lads=log(1+nads))
-data_ai=data_ai %>% mutate(lads0=log(nads))
-
-data_ai=data_ai %>% mutate(GEOID=as.numeric(FIPS)) %>% 
-  mutate(year=year+1)%>% inner_join(county_controls_prelim %>% select(-state) %>% rename(year=Year))
+data_ai=data_ai %>% mutate(GEOID=as.numeric(FIPS))%>% inner_join(county_controls_prelim %>% rename(year=Year) %>% mutate(year=year+1))
 
 # prepare demographics
 # right hand side variables are demographics: unemployment rate:unrate, log median household income, share_bac, share_black, share_poverty, log HPI, log population, log immigration.
@@ -84,10 +64,10 @@ data_ai= data_ai %>%  mutate(information_intensity_est=information_est/est,busin
 data_ai= data_ai %>%  mutate(loggdp=log(private_gdp))
 
 
-data_ai= data_ai %>% group_by(FIPScounty) %>%  mutate(EarnSgr=log(EarnS)/lag(log(EarnS),1))
+data_ai= data_ai %>% group_by(FIPS) %>%  mutate(EarnSgr=log(EarnS)/lag(log(EarnS),1))
 
-data_ai= data_ai %>% group_by(FIPScounty) %>%  mutate(annual_paygr=log(avg_annual_pay)/lag(log(avg_annual_pay),1))
-data_ai= data_ai %>% group_by(FIPScounty) %>%  mutate(annual_paygr=log(avg_annual_pay)/lag(log(avg_annual_pay),1))
+data_ai= data_ai %>% group_by(FIPS) %>%  mutate(annual_paygr=log(avg_annual_pay)/lag(log(avg_annual_pay),1))
+data_ai= data_ai %>% group_by(FIPS) %>%  mutate(annual_paygr=log(avg_annual_pay)/lag(log(avg_annual_pay),1))
 
 data_ai= data_ai %>% ungroup() %>%  mutate(manufest_intensity=manuf_annual_avg_estabs/annual_avg_estabs)
 
@@ -102,8 +82,12 @@ data_ai= data_ai %>%  mutate(stemshare=replace_na(stemshare,0),stemshare2=replac
 data_ai= data_ai %>%  mutate(tightness=nads/Unemployed)
 data_ai= data_ai %>%  mutate(hpi_ch=hpi_ch/100)
 
+subset_select=c("state","year","FIPS","ai","nads","share_poverty","TurnOvrS","medhhincome","hpi","hpi_ch","pop_above18",
+                "unrate","share_bac","share_black","medage","small","medium","est","management_emp","manuf_emp","information_emp",
+                "emp","Employed","pop","n_patents","n_inventors","n_researchers","ai_patents","ai_inventors","education_researchers",
+                "median_rent","information_est","manuf_est","private_gdp","udeg","mdeg","ustemdeg","mstemdeg","Unemployed")
 
-data_ai %>% write_csv("data.csv")
+data_ai %>% select(subset_select)%>% write_csv("data.csv")
 
 
 
