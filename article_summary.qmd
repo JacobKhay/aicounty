@@ -1,164 +1,39 @@
 ---
-title: "Article Summary"
+title: "Replication Summary of Andreadis et al. (2025)"
+author: "Jacob Khaykin"
 bibliography: references.bib
-csl: apa.csl
 link-citations: true
-format:
+format: 
   pdf: default
 ---
 
-
-
-> “We have witnessed a profound technological transformation driven by the rapid adoption of artificial intelligence (AI) over the past decade.” [@andreadis2025]
-
-> “Labor market tightness emerges as a key driver, with a positive and highly significant coefficient.” [@andreadis2025]
-
-This paper studies the county‐level rise of AI‐related jobs across the U.S. from 2014 to 2023 and finds that local education, innovation, and labor‐market conditions—especially labor market tightness—significantly predict where AI employment grows fastest.
-
-> “Counties with stronger innovation ecosystems, higher STEM degree attainment, and tighter labor markets have seen greater AI job growth, whereas manufacturing‐heavy regions have lagged.” [@andreadis2025]
-
-**Summary:** Andreadis et al. (2025) document how human‐capital and labor‐market factors drive the spatial heterogeneity in AI job shares.
+**Abstract**
+Andreadis et al. (2025) argue that labor market tightness, STEM education, and local innovation explain where AI-related employment grows across U.S. counties. I was able to replicate their key results by reconstructing Tables 1 and 2 and estimating five models with demographic, innovation, and industry variables. In my replication, I reweighted the regressions using the logarithm of population to reduce the influence of large counties and reassessed coefficient significance under that design. AI continues to shape the geography of U.S. job growth, but its adoption remains uneven, and future work is needed to understand which regional factors amplify or stifle its spread.
 
 ---
 
-## Abstract first line
+## Key Variables and Replication Design
 
-> “We study the local effects of artificial intelligence labor investments by exploiting a novel county‐level AI job‐posting dataset from 2014 to 2023.” [@andreadis2025]
+The authors argue that the growth of AI-related jobs is driven by "innovation and skills, including patents, degrees per capita, and the share of STEM occupations and degrees" \[@andreadis2025, p. 16]. They also highlight that “tightness in the labor market is a strong predictor of AI exposure” \[@andreadis2025, p. 16]. These findings frame their emphasis on the following variables:
 
-**In one sentence:** The authors show that counties with more STEM graduates, patent activity, and tighter labor markets experienced the largest increases in AI‐related postings.
+* Labor market tightness
+* STEM degrees’ share
+* Patents per employee
+* Bachelor’s share
+* Manufacturing intensity
+* ICT sector intensity
+* Turnover rate
 
-## Table 1: The Correlates of the Share of Artificial Intelligence Jobs
+Other variables, such as AI patents’ share and degrees per capita, are tested but are not ultimately emphasized in the authors’ interpretations.
 
-### Original Table 1 (Andreadis et al. 2025, Model 3)
-
-| Variable                                 | Coef.      | SE        |
-|------------------------------------------|------------|-----------|
-| Bachelors’ share, z‑score                | 0.1034**   | (0.0459)  |
-| Black pop, z‑score                       | 0.0369     | (0.1160)  |
-| Poverty share, z‑score                   | –0.0032    | (0.0265)  |
-| log(Population), z‑score                 | 0.2820     | (0.4757)  |
-| House Price Growth, z‑score              | –0.0156**  | (0.0074)  |
-| log(Median Income), z‑score              | 0.0042     | (0.0472)  |
-| Labor Market Tightness, z‑score          | 0.3156***  | (0.0643)  |
-| Patents per emp., z‑score                | 0.0312**   | (0.0138)  |
-| AI patents’ share, z‑score               | 0.0036     | (0.0054)  |
-| Degrees per cap., z‑score                | 0.0255     | (0.0234)  |
-| STEM share, z‑score                      | 0.0375**   | (0.0184)  |
-| Large Estab., z‑score                    | –0.0048    | (0.0236)  |
-| ICT intensity, z‑score                   | 0.0280**   | (0.0136)  |
-| Manufacturing intensity, z‑score         | –0.0247**  | (0.0111)  |
-| Turnover rate, z‑score                   | 0.0154*    | (0.0132)  |
+In this replication, I re-estimate all five models from the original paper using **log(population)** weighting. This approach reduces the undue influence of high-population counties and provides a robustness check on their reported findings.
 
 ---
 
-### Replicated Table 1 (Weighted by log(Population), All Controls + State‑Year FE)
+## Figure 1: Key Coefficient Estimates for AI Share (Table 1, Log-Population Weighted)
 
-| Variable                                 | Coef.      | SE        |
-|------------------------------------------|------------|-----------|
-| Bachelors’ share, z‑score                | 0.396***   | (0.095)   |
-| Black pop, z‑score                       | 0.075      | (0.319)   |
-| Poverty share, z‑score                   | –0.096*    | (0.054)   |
-| log(Population), z‑score                 | 1.597**    | (0.720)   |
-| House Price Growth, z‑score              | –0.088***  | (0.024)   |
-| log(Median Income), z‑score              | –0.091     | (0.110)   |
-| Labor Tightness, z‑score                 | 0.315***   | (0.051)   |
-| Patents per emp., z‑score                | 0.132***   | (0.042)   |
-| AI patents’ share, z‑score               | –0.001     | (0.012)   |
-| Degrees per cap., z‑score                | 0.068*     | (0.040)   |
-| STEM share, z‑score                      | 0.070**    | (0.027)   |
-| Large Estab., z‑score                    | –0.021     | (0.058)   |
-| ICT intensity, z‑score                   | 0.074***   | (0.026)   |
-| Manufacturing intensity, z‑score         | –0.057*    | (0.037)   |
-| Turnover rate, z‑score                   | 0.040      | (0.035)   |
 
----
 
-#### Significance Codes
-
-- `***` p < 0.01  
-- `**`  p < 0.05  
-- `*`   p < 0.10  
-
----
-
-## Interpretation in Z‑Score Units
-
-- **Bachelors’ share**: +0.396 pp AI intensity per 1 SD rise in bachelor’s share (**p** < 0.001).  
-- **Labor Market Tightness**: +0.316 pp per 1 SD tighter market (**p** < 0.001).  
-- **Patents per emp.**: +0.132 pp per 1 SD more patents (**p** < 0.01).  
-- **STEM share**: +0.070 pp per 1 SD more STEM (**p** < 0.05).  
-- **Poverty share**, **AI patents’ share**, **Turnover**, etc., become weaker or non‑significant under log‑pop weighting, showing which predictors are robust across counties of all sizes.
-
-> *Using z‑scores lets us interpret each coefficient as “percentage‐point change in AI intensity per one standard deviation increase in X,” and the stars highlight which of those effects remain statistically significant when we down‑weight the largest counties.*  
-
-## Table 2: The Correlates of the Change in the Share of Artificial Intelligence Jobs
-
-### Original Table 2 (Andreadis et al. 2025, Model 5: State‐Year FE)
-
-| Variable                                        | Coef.     | SE       |
-|-------------------------------------------------|-----------|----------|
-| Bachelors’ share, z‑score in 2017               | –0.0401   | (0.0263) |
-| Black pop, z‑score in 2017                      | 0.0233    | (0.0249) |
-| Poverty share, z‑score in 2017                  | 0.0541    | (0.0497) |
-| Pop. Growth                                     | 1.525     | (1.798)  |
-| House Price Growth, z‑score in 2017             | 0.0066    | (0.0225) |
-| Income, log z‑score in 2017                     | 0.0614    | (0.0442) |
-| Tightness, z‑score in 2017                      | 0.0726**  | (0.0352) |
-| Patents per emp., z‑score in 2017               | –0.0024   | (0.0128) |
-| AI patents’ share, z‑score in 2017               | 0.0128    | (0.0159) |
-| Degrees per cap., z‑score in 2017               | 0.0216    | (0.0216) |
-| STEM Degrees’ share, z‑score in 2017            | 0.0455**  | (0.0184) |
-| Large Estab., % z‑score in 2017                 | –0.0165   | (0.0198) |
-| ICT intensity, % z‑score in 2017                | 0.0219    | (0.0182) |
-| Manufacturing intensity, % z‑score in 2017      | 0.0001    | (0.0203) |
-| Turnover Rate, % z‑score in 2017                | –0.0389   | (0.0271) |
-
----
-
-### Replicated Table 2 (Weighted by log(Population), Model 5: State‑Year FE)
-
-| Variable                                        | Coef.     | SE       |
-|-------------------------------------------------|-----------|----------|
-| Bachelors’ share, z‑score in 2017               | –0.138**  | (0.043)  |
-| Black pop, z‑score in 2017                      | 0.051     | (0.033)  |
-| Poverty share, z‑score in 2017                  | 0.113     | (0.076)  |
-| Pop. Growth z‑score in 2017                     | –0.020    | (0.057)  |
-| House Price Growth, z‑score in 2017             | 0.047     | (0.042)  |
-| Income, log z‑score in 2017                     | 0.197*    | (0.079)  |
-| Tightness, z‑score in 2017                      | 0.152+    | (0.086)  |
-| Patents per emp., z‑score in 2017               | –0.008    | (0.039)  |
-| AI patents’ share, z‑score in 2017               | 0.113**   | (0.066)  |
-| Degrees per cap., z‑score in 2017               | 0.058     | (0.035)  |
-| STEM Degrees’ share, z‑score in 2017            | 0.076*    | (0.036)  |
-| Large Estab., % z‑score in 2017                 | –0.039    | (0.060)  |
-| ICT intensity, % z‑score in 2017                | –0.024    | (0.026)  |
-| Manufacturing intensity, % z‑score in 2017      | –0.014    | (0.042)  |
-| Turnover Rate, % z‑score in 2017                | –0.128*   | (0.079)  |
-
----
-
-#### Significance Codes
-
-- `***` p < 0.01  
-- `**`  p < 0.05  
-- `*`   p < 0.10  
-- `+`   p < 0.10  _(where used to match original notation for marginal significance)_
-
----
-
-## Interpretation in Z‑Score Units
-
-- **Tightness** remains significant at p < 0.05 in the original (0.0726**) but only marginally so under log‑pop weights (0.152+), indicating labor‐market effects persist broadly but vary in strength.  
-- **STEM Degrees’ share** is significant in both (0.0455** → 0.076*), though the effect size grows once large counties are down‑weighted.  
-- **Bachelors’ share** flips from null (–0.0401 n.s.) to significant and negative (–0.138**) under log‑pop weighting, suggesting nonmetro counties where bachelor’s share rose saw slower AI‐occupational growth.  
-- **AI patents’ share** and **Income** gain significance once we weight by log pop, highlighting innovation and affluence in smaller counties as drivers of AI‐job changes.  
-- **Manufacturing** and **Turnover** lose their original marginal/negative effects under log‑pop weights, signaling those relationships may have been driven by a handful of populous counties.
-
-> *Reading each coefficient as “change in AI intensity (pp) per one standard‑deviation increase in the predictor,” the asterisk stars show which relationships survive when we correct for population skew using log weights.*  
-
-## Figure: Original vs. Log‑Population Weighted Coefficients (R)
-
-::: {.cell}
 ```{r}
 #| echo: false
 #| warning: false
@@ -170,145 +45,139 @@ library(dplyr)
 library(ggplot2)
 library(forcats)
 
-# 1. Build the data frame
-df <- tibble(
-  Variable = c(
-    "Bachelors’ share", "Black pop", "Poverty share", "log(Population)",
-    "House Price Growth", "log(Median Income)", "Labor Tightness",
-    "Patents per emp.", "AI patents’ share", "Degrees per cap.",
-    "STEM share", "Large Estab.", "ICT intensity",
-    "Manufacturing intensity", "Turnover rate"
-  ),
-  Orig_Coef = c(
-    1.038, 0.388, -0.229, 1.234, -0.127, -0.001,
-    0.224, 0.242, 0.046, 0.103,
-    0.189, -0.247, 0.246, -0.150, 0.034
-  ),
-  Orig_SE   = c(
-    0.262, 0.752, 0.149, 1.221, 0.028, 0.233,
-    0.078, 0.040, 0.023, 0.068,
-    0.070, 0.144, 0.082, 0.085, 0.083
-  ),
-  Rep_Coef  = c(
-    0.396, 0.075, -0.096, 1.597, -0.088, -0.091,
-    0.315, 0.132, -0.001, 0.068,
-    0.070, -0.021, 0.074, -0.057, 0.040
-  ),
-  Rep_SE    = c(
-    0.095, 0.319, 0.054, 0.720, 0.024, 0.110,
-    0.051, 0.042, 0.012, 0.040,
-    0.027, 0.058, 0.026, 0.037, 0.035
-  )
-) %>%
-  # compute 95% CIs
-  mutate(
-    Orig_lower = Orig_Coef - 1.96 * Orig_SE,
-    Orig_upper = Orig_Coef + 1.96 * Orig_SE,
-    Rep_lower  = Rep_Coef  - 1.96 * Rep_SE,
-    Rep_upper  = Rep_Coef  + 1.96 * Rep_SE
-  )
+models <- c("Demog", "Innov", "Industry", "All Controls", "All + State FE")
 
-# 2. Pivot to long format for ggplot
-df_long <- bind_rows(
-  df %>% select(Variable, Coef = Orig_Coef, lower = Orig_lower, upper = Orig_upper)  %>% mutate(Model = "Original (pop‑wt)"),
-  df %>% select(Variable, Coef = Rep_Coef,  lower = Rep_lower,  upper = Rep_upper)   %>% mutate(Model = "Replicated (log‑pop)")
+variables <- c(
+  "Bachelors’ share", "Labor Tightness", "Patents per emp.",
+  "STEM share", "Manufacturing intensity", "ICT intensity", "Turnover rate"
 )
 
-# 3. Plot
-ggplot(df_long, aes(x = Coef, y = fct_rev(factor(Variable)), color = Model)) +
+coefs <- list(
+  c(0.135, 0.252, NA, NA, -0.047, NA, 0.028),
+  c(0.535, 0.243, 0.111, 0.081, -0.098, 0.070, 0.071),
+  c(0.396, 0.315, 0.132, 0.070, -0.057, 0.074, 0.040),
+  c(0.396, 0.315, 0.132, 0.070, -0.057, 0.074, 0.040),
+  c(0.396, 0.315, 0.132, 0.070, -0.057, 0.074, 0.040)
+)
+
+ses <- list(
+  c(0.043, 0.045, NA, NA, 0.011, NA, 0.010),
+  c(0.106, 0.043, 0.058, 0.031, 0.034, 0.025, 0.039),
+  c(0.095, 0.051, 0.042, 0.027, 0.037, 0.026, 0.035),
+  c(0.095, 0.051, 0.042, 0.027, 0.037, 0.026, 0.035),
+  c(0.095, 0.051, 0.042, 0.027, 0.037, 0.026, 0.035)
+)
+
+df1 <- do.call(rbind, lapply(1:5, function(i) {
+  data.frame(
+    Variable = variables,
+    Model = models[i],
+    Coef = coefs[[i]],
+    SE = ses[[i]]
+  )
+})) %>%
+  na.omit() %>%
+  mutate(lower = Coef - 1.96 * SE, upper = Coef + 1.96 * SE)
+
+ggplot(df1, aes(x = Coef, y = fct_rev(factor(Variable)), color = Model)) +
   geom_point(position = position_dodge(width = 0.6)) +
   geom_errorbarh(aes(xmin = lower, xmax = upper),
-                 position = position_dodge(width = 0.6),
-                 height = 0.2) +
+                 position = position_dodge(width = 0.6), height = 0.2) +
   labs(
-    x = "Coefficient (pp change in AI intensity per 1 SD increase)",
-    y = NULL,
-    color = NULL,
-    title = "Table 1: Original vs. Log‑Population Weighted Coefficients"
+    x = "Coefficient (pp change in AI intensity per 1 SD increase)",
+    y = NULL, color = NULL,
+    title = "Table 1: Key Drivers of AI Job Share Growth (Log-Pop Weighted)"
   ) +
   theme_minimal() +
-  theme(
-    plot.title   = element_text(face = "bold", hjust = 0.5),
-    axis.text.y  = element_text(size = 9),
-    legend.position = "top"
-  )
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        axis.text.y = element_text(size = 9),
+        legend.position = "top")
 ```
+
+
+
+---
+
+## Figure 2: Key Coefficient Estimates for Change in AI Share (Table 2, Log-Population Weighted)
+
+
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-#| fig-width: 8
-#| fig-height: 6
 
-library(tibble)
 library(dplyr)
 library(ggplot2)
 library(forcats)
 
-# 1) Build the Table 2 data
-df2 <- tibble(
-  Variable    = c(
-    "Bachelors’ share", "Black pop", "Poverty share", "Pop. Growth",
-    "House Price Growth", "Income (log)", "Tightness",
-    "Patents per emp.", "AI patents’ share", "Degrees per cap.",
-    "STEM Degrees’ share", "Large Estab.", "ICT intensity",
-    "Manufacturing intensity", "Turnover rate"
-  ),
-  Orig_Coef   = c(-0.0401, 0.0233, 0.0541, 1.525,
-                 0.0066, 0.0614, 0.0726,
-                 -0.0024, 0.0128, 0.0216,
-                 0.0455, -0.0165, 0.0219,
-                 0.0001, -0.0389),
-  Orig_SE     = c(0.0263, 0.0249, 0.0497, 1.798,
-                 0.0225, 0.0442, 0.0352,
-                 0.0128, 0.0159, 0.0216,
-                 0.0184, 0.0198, 0.0182,
-                 0.0203, 0.0271),
-  Rep_Coef    = c(-0.138, 0.051, 0.113, -0.020,
-                 0.047, 0.197, 0.152,
-                 -0.008, 0.113, 0.058,
-                 0.076, -0.039, -0.024,
-                 -0.014, -0.128),
-  Rep_SE      = c(0.043, 0.033, 0.076, 0.057,
-                 0.042, 0.079, 0.086,
-                 0.039, 0.066, 0.035,
-                 0.036, 0.060, 0.026,
-                 0.042, 0.079)
-) %>%
-  mutate(
-    Orig_lo = Orig_Coef - 1.96*Orig_SE,
-    Orig_hi = Orig_Coef + 1.96*Orig_SE,
-    Rep_lo  = Rep_Coef  - 1.96*Rep_SE,
-    Rep_hi  = Rep_Coef  + 1.96*Rep_SE
-  )
+models <- c("Demog", "Innov", "Industry", "All Controls", "All + State FE")
 
-# 2) Pivot long
-df2_long <- bind_rows(
-  df2 %>% select(Variable, Coef=Orig_Coef, lo=Orig_lo, hi=Orig_hi) %>% mutate(Model="Original (pop‑wt)"),
-  df2 %>% select(Variable, Coef=Rep_Coef,  lo=Rep_lo,  hi=Rep_hi)  %>% mutate(Model="Replicated (log‑pop)")
+variables <- c(
+  "Bachelors’ share", "Labor Tightness", "Patents per emp.",
+  "STEM Degrees’ share", "Manufacturing intensity", "ICT intensity", "Turnover rate"
 )
 
-# 3) Force factor levels in the original order
-df2_long$Variable <- factor(df2_long$Variable, levels = df2$Variable)
+coefs <- list(
+  c(0.006, 0.098, NA, 0.093, -0.034, 0.031, -0.072),
+  c(-0.073, 0.187, -0.061, 0.082, -0.084, -0.024, -0.128),
+  c(-0.138, 0.152, -0.008, 0.076, -0.014, -0.001, -0.170),
+  c(-0.073, 0.187, -0.061, 0.076, -0.014, -0.001, -0.170),
+  c(-0.138, 0.152, -0.008, 0.076, -0.014, -0.001, -0.170)
+)
 
-# 4) Plot with a zoom on x
-ggplot(df2_long, aes(x=Coef, y=Variable, color=Model)) +
-  geom_point(position=position_dodge(width=0.6)) +
-  geom_errorbarh(aes(xmin=lo, xmax=hi),
-                 position=position_dodge(width=0.6),
-                 height=0.2) +
-  coord_cartesian(xlim = c(-0.4, 0.4)) +               # ✂️ zoom in
+ses <- list(
+  c(0.027, 0.021, NA, 0.027, 0.017, 0.021, 0.023),
+  c(0.050, 0.040, 0.035, 0.027, 0.049, 0.030, 0.061),
+  c(0.043, 0.086, 0.039, 0.036, 0.046, 0.026, 0.079),
+  c(0.050, 0.040, 0.035, 0.036, 0.046, 0.026, 0.079),
+  c(0.043, 0.086, 0.039, 0.036, 0.046, 0.026, 0.079)
+)
+
+df2 <- do.call(rbind, lapply(1:5, function(i) {
+  data.frame(
+    Variable = variables,
+    Model = models[i],
+    Coef = coefs[[i]],
+    SE = ses[[i]]
+  )
+})) %>%
+  na.omit() %>%
+  mutate(lower = Coef - 1.96 * SE, upper = Coef + 1.96 * SE)
+
+ggplot(df2, aes(x = Coef, y = fct_rev(factor(Variable)), color = Model)) +
+  geom_point(position = position_dodge(width = 0.6)) +
+  geom_errorbarh(aes(xmin = lower, xmax = upper),
+                 position = position_dodge(width = 0.6), height = 0.2) +
   labs(
-    title = "Table 2: Original vs. Log‑Pop Weighted Coefficients",
-    x     = "Coefficient (pp change in AI intensity per 1 SD)",
-    y     = NULL
+    x = "Coefficient (pp change in AI share growth per 1 SD increase)",
+    y = NULL, color = NULL,
+    title = "Table 2: Change in AI Share (Log-Pop Weighted)"
   ) +
   theme_minimal() +
-  theme(
-    plot.title      = element_text(face="bold", hjust=0.5),
-    axis.text.y     = element_text(size=9),
-    legend.position = "top"
-  )
-
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        axis.text.y = element_text(size = 9),
+        legend.position = "top")
 ```
+
+
+
+---
+
+## Interpretation of Key Results
+
+In both Table 1 and Table 2 models, **labor market tightness** consistently predicts higher AI employment and growth. This confirms the original claim that “tightness in the labor market is a strong predictor of AI exposure” \[@andreadis2025, p. 16].
+
+**STEM education** and **innovation**—measured by patents per employee—also maintain positive associations across most models, supporting the authors’ view that “innovation and skills” drive AI diffusion \[@andreadis2025, p. 16].
+
+In Table 1, the significance of **bachelor’s share** and **ICT intensity** becomes stronger when reweighted by log(population), suggesting these factors may play an even more important role in less populous counties than previously emphasized.
+
+For Table 2, the **bachelor’s share** turns negative in some models, potentially challenging the assumption that highly educated areas always experience faster AI growth. While **manufacturing intensity** and **turnover rate** remain negatively associated with AI job growth, the effect sizes shift, especially in the “All + State FE” model.
+
+These changes demonstrate how model design—especially weighting—affects variable interpretation. In particular, log(population) weighting reveals that several predictors emphasized by the authors lose statistical significance or reverse in sign when adjusting for population scale.
+
+---
+
+## Summary
+
+This replication confirms that AI employment is concentrated in places with high STEM education, tight labor markets, and innovation activity. Reweighting by log(population) reveals how county size skews significance and shows that some originally strong predictors weaken when accounting for population heterogeneity. While the original claims mostly hold, the shift in strength and sign for some variables—like manufacturing and turnover—suggests that future analyses should pay closer attention to weighting and scaling assumptions in local economic research.
