@@ -1,0 +1,8 @@
+# Quarto render artifacts
+*_files
+_site
+_cache/
+.quarto/
+*.html
+*.nb.html
+unamed-chunk-*

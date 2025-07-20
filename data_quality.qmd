@@ -1,0 +1,106 @@
+---
+title: "Data Quality Exploration"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## 1. Load Libraries and Data
+
+```{r}
+library(tidyverse)
+library(naniar)
+library(ggplot2)
+library(sf)
+library(tigris)
+
+# Read raw data
+raw <- read_csv("data.csv", show_col_types = FALSE)
+
+# Quick overview
+glimpse(raw)
+```
+
+```{r}
+# Calculate percentage missing by column
+missings <- raw %>% 
+  summarise(across(everything(), ~ mean(is.na(.)) * 100)) %>% 
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_missing")
+
+# Plot
+ggplot(missings, aes(fct_reorder(variable, pct_missing), pct_missing)) +
+  geom_col(fill = "tomato") +
+  coord_flip() +
+  labs(
+    x = NULL, 
+    y = "% Missing", 
+    title = "Missingness by Variable"
+  )
+
+```
+
+```{r}
+# Compute AI intensity and summary
+data <- raw %>% 
+  mutate(ai_intensity = ai / nads)
+
+data %>% 
+  summarise(
+    min_ai = min(ai_intensity, na.rm = TRUE),
+    p10_ai = quantile(ai_intensity, 0.10, na.rm = TRUE),
+    med_ai = median(ai_intensity, na.rm = TRUE),
+    p90_ai = quantile(ai_intensity, 0.90, na.rm = TRUE),
+    max_ai = max(ai_intensity, na.rm = TRUE)
+  )
+
+```
+
+```{r}
+# Counties with zero job ads (nads == 0)
+zeros <- raw %>% filter(nads == 0)
+nrow(zeros)
+
+# Counties with infinite intensity
+infs <- data %>% filter(is.infinite(ai_intensity))
+nrow(infs)
+
+```
+
+```{r}
+## 5. Geographic Completeness
+
+```{r}
+options(tigris_use_cache = TRUE)
+
+# 1) Load and cache the county shapes quietly
+shp <- suppressMessages(
+  tigris::counties(cb = TRUE, class = "sf", year = 2020)
+) %>%
+  st_transform(4326) %>%
+  mutate(FIPS = GEOID)  # this is already a character
+
+# 2) Prepare a distinct list of FIPS from your raw data, as 5‑char strings
+fips_list <- raw %>%
+  mutate(
+    COUNTY_FIPS = str_pad(as.character(COUNTY_FIPS), width = 5, side = "left", pad = "0")
+  ) %>%
+  distinct(COUNTY_FIPS)
+
+# 3) Join and count how many shapes did *not* find a match
+joined <- left_join(shp, fips_list, by = c("FIPS" = "COUNTY_FIPS"))
+
+n_no_data <- sum(is.na(joined$COUNTY_FIPS))
+cat("Number of counties with no matching data:", n_no_data, "\n")
+
+
+```
+
+
+Findings and Remaining Data Issues
+Our initial overview confirms the dataset includes the expected 31,300 county‑year observations and 39 variables, but the missing‑data chart reveals that several key predictors—particularly n_inventors, ai_patents, and medhhincome—have non‑trivial gaps (often around 5–10%). If left unaddressed, these gaps could bias our regressions or artificially reduce sample size. We should decide on a consistent imputation strategy (e.g. period means or conditional regressions) or restrict our analysis to counties with complete information for the most critical covariates.
+
+Although only three rows corresponded to nads == 0, recoding those as NA for ai_intensity is essential—otherwise we risk dividing by zero or misinterpreting zero‑job‑advertisement counties. We found no truly infinite values once that correction is applied, but the distribution of AI intensity remains heavily right‑skewed: the top 1% of county‑years exceed an AI share of 1%, with a handful of extreme observations (e.g., small rural counties posting extraordinarily high percentages). We will need to inspect those outliers individually to determine whether they reflect genuine local booms or data‑entry anomalies.
+
+On the geographic front, all 3,130 counties in our data successfully matched Census shapefile FIPS codes, so there are no lingering format mismatches. With FIPS codes now standardized to five characters, our interactive maps will accurately reflect every county. Moving forward, our priority is to impute or drop high‑missingness fields, recode zeros in denominator variables to NA, and consider trimming or winsorizing extreme AI‑share outliers before estimating the models that underpin Table 2.

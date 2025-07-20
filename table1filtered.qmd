@@ -1,0 +1,140 @@
+---
+title: "Replication of Table 1 (Excluding Small Counties)"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+
+```{r}
+library(tidyverse)      # data wrangling
+library(fixest)         # fixed‐effects regressions
+library(modelsummary)   # regression tables
+library(kableExtra)     # styling tables
+
+```
+
+```{r}
+# 1. Load and compute derived vars
+data_ai <- read_csv("data.csv", show_col_types = FALSE) |> 
+  ungroup() |> 
+  mutate(
+    degshare              = (udeg + mdeg) / Employed,
+    stemshare             = (ustemdeg + mstemdeg) / (udeg + mdeg),
+    tightness             = nads / Unemployed,
+    hpi_ch                = hpi_ch / 100,
+    logpop                = log(pop),
+    logincome             = log(medhhincome),
+    pat_intensity         = n_inventors / Employed,
+    patai_intensity       = ai_patents / n_patents,
+    large_firms           = 1 - (small + medium) / est,
+    information_intensity = information_emp / emp,
+    manuf_intensity       = manuf_emp / emp,
+    ai_intensity          = ai / nads,
+    lads                  = log1p(nads),
+    state_year            = paste0(state, Year)
+  )
+
+# 2. Z‑score and percent‑convert AI share
+data_ai_z <- data_ai |> 
+  filter(emp > 0) |> 
+  mutate(across(
+    c(share_bac, share_black, share_poverty,
+      logpop, hpi_ch, logincome, tightness,
+      pat_intensity, patai_intensity,
+      degshare, stemshare,
+      large_firms, information_intensity,
+      manuf_intensity, TurnOvrS),
+    scale
+  ),
+  ai_intensity = ai_intensity * 100
+  )
+
+# 3. Drop 'small' counties (below‑median population)
+data_ai_z_large <- data_ai_z |> 
+  filter(logpop > 0)
+
+```
+
+```{r}
+# Run the five FE specifications on the filtered data
+est1 <- feols(ai_intensity ~ share_bac + share_black + share_poverty +
+                logpop + hpi_ch + logincome + tightness
+              | Year + COUNTY_FIPS,
+              data    = data_ai_z_large,
+              cluster = "COUNTY_FIPS",
+              weights = ~lads)
+
+est2 <- feols(ai_intensity ~ pat_intensity + patai_intensity + degshare + stemshare
+              | Year + COUNTY_FIPS,
+              data    = data_ai_z_large,
+              cluster = "COUNTY_FIPS",
+              weights = ~lads)
+
+est3 <- feols(ai_intensity ~ large_firms + information_intensity + manuf_intensity + TurnOvrS
+              | Year + COUNTY_FIPS,
+              data    = data_ai_z_large,
+              cluster = "COUNTY_FIPS",
+              weights = ~lads)
+
+est4 <- feols(ai_intensity ~ share_bac + share_black + share_poverty +
+                logpop + hpi_ch + logincome + tightness +
+                pat_intensity + patai_intensity + degshare + stemshare +
+                large_firms + information_intensity + manuf_intensity + TurnOvrS
+              | Year + COUNTY_FIPS,
+              data    = data_ai_z_large,
+              cluster = "COUNTY_FIPS",
+              weights = ~lads)
+
+est5 <- feols(ai_intensity ~ share_bac + share_black + share_poverty +
+                logpop + hpi_ch + logincome + tightness +
+                pat_intensity + patai_intensity + degshare + stemshare +
+                large_firms + information_intensity + manuf_intensity + TurnOvrS
+              | state_year + COUNTY_FIPS,
+              data    = data_ai_z_large,
+              cluster = "COUNTY_FIPS",
+              weights = ~lads)
+
+```
+
+```{r}
+# Friendly labels
+labels <- c(
+  share_bac             = "Bachelors’ share, z-score",
+  share_black           = "Black pop, z-score",
+  share_poverty         = "Poverty share, z-score",
+  logpop                = "log(Population), z-score",
+  hpi_ch                = "House Price Growth, z-score",
+  logincome             = "log(Median Income), z-score",
+  tightness             = "Labor Market Tightness, z-score",
+  pat_intensity         = "Patents per employee, z-score",
+  patai_intensity       = "AI patents’ share, z-score",
+  degshare              = "Degrees awarded per capita, z-score",
+  stemshare             = "Stem Degrees’ share, z-score",
+  large_firms           = "Large Establishments, z-score",
+  information_intensity = "ICT sector Intensity, z-score",
+  manuf_intensity       = "Manufacturing Intensity, z-score",
+  TurnOvrS              = "Turnover Rate, z-score"
+)
+
+# Render with modelsummary → kableExtra
+modelsummary(
+  list(
+    "(1)" = est1,
+    "(2)" = est2,
+    "(3)" = est3,
+    "(4)" = est4,
+    "(5)" = est5
+  ),
+  coef_map   = labels,
+  stars      = TRUE,
+  statistic  = "({std.error})",
+  gof_omit   = "IC|Log|Adj|RMSE",
+  title      = "Table 1: Correlates of AI Share (Larger Counties Only)",
+  output     = "kableExtra"
+) %>%
+  kable_styling(full_width = FALSE, position = "center")
+
+```

@@ -1,0 +1,184 @@
+---
+title: "Table 2 (Filtered): Change in AI Share"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(tidyverse)
+library(fixest)
+library(modelsummary)
+library(kableExtra)
+
+```
+
+```{r}
+# 1. Load and derive raw metrics
+raw <- read_csv("data.csv", show_col_types = FALSE)
+
+derived <- raw %>%
+  mutate(
+    degshare              = (udeg + mdeg) / Employed,
+    stemshare             = (ustemdeg + mstemdeg) / (udeg + mdeg),
+    tightness             = nads / Unemployed,
+    hpi_ch                = hpi_ch / 100,
+    logpop                = log(pop),
+    logincome             = log(medhhincome),
+    pat_intensity         = n_inventors / Employed,
+    patai_intensity       = ai_patents / n_patents,
+    large_firms           = 1 - (small + medium) / est,
+    information_intensity = information_emp / emp,
+    manuf_intensity       = manuf_emp / emp,
+    ai_intensity          = ai / nads * 100
+  )
+
+# 2. Compute early (2017–18) and late (2022–23) averages by state & county
+summary_data <- derived %>%
+  filter(Year %in% c(2017,2018,2022,2023)) %>%
+  mutate(period = ifelse(Year %in% c(2017,2018), "early", "late")) %>%
+  group_by(state, COUNTY_FIPS, period) %>%
+  summarise(across(
+    c(ai_intensity, share_bac, share_black, share_poverty,
+      logpop, hpi_ch, logincome, tightness,
+      pat_intensity, patai_intensity,
+      degshare, stemshare,
+      large_firms, information_intensity,
+      manuf_intensity, TurnOvrS),
+    ~ mean(.x, na.rm=TRUE)
+  ), .groups="drop")
+
+# 3. Pivot to wide, get _early and _late suffixes
+wide <- summary_data %>%
+  pivot_wider(
+    names_from  = period,
+    values_from = c(ai_intensity, share_bac, share_black, share_poverty,
+                    logpop, hpi_ch, logincome, tightness,
+                    pat_intensity, patai_intensity,
+                    degshare, stemshare,
+                    large_firms, information_intensity,
+                    manuf_intensity, TurnOvrS)
+  )
+
+# 4. Filter out “small” counties: require early population ≥ 50,000
+#    note: pop = exp(logpop), so pop >= 50000 <=> logpop >= log(50000)
+threshold <- log(50000)
+wide_large <- wide %>%
+  filter(logpop_early >= threshold)
+
+# 5. Compute changes and z‑score only the numeric early covariates
+data2 <- wide_large %>%
+  mutate(
+    d_ai    = ai_intensity_late - ai_intensity_early,
+    d_bac   = share_bac_late      - share_bac_early,
+    d_black = share_black_late    - share_black_early,
+    d_pov   = share_poverty_late  - share_poverty_early,
+    d_pop   = logpop_late         - logpop_early,
+    d_hpi   = hpi_ch_late         - hpi_ch_early,
+    d_inc   = logincome_late      - logincome_early,
+    d_tight = tightness_late      - tightness_early,
+    d_pat   = pat_intensity_late  - pat_intensity_early,
+    d_patai = patai_intensity_late- patai_intensity_early,
+    d_deg   = degshare_late       - degshare_early,
+    d_stem  = stemshare_late      - stemshare_early,
+    d_large = large_firms_late    - large_firms_early,
+    d_info  = information_intensity_late - information_intensity_early,
+    d_manuf = manuf_intensity_late - manuf_intensity_early,
+    d_turn  = TurnOvrS_late       - TurnOvrS_early
+  ) %>%
+  # Now scale *only* the early covariates we actually use
+  mutate(
+    z_share_bac_early             = scale(share_bac_early),
+    z_share_black_early           = scale(share_black_early),
+    z_share_poverty_early         = scale(share_poverty_early),
+    z_logpop_early                = scale(logpop_early),
+    z_hpi_ch_early                = scale(hpi_ch_early),
+    z_logincome_early             = scale(logincome_early),
+    z_tightness_early             = scale(tightness_early),
+    z_pat_intensity_early         = scale(pat_intensity_early),
+    z_patai_intensity_early       = scale(patai_intensity_early),
+    z_degshare_early              = scale(degshare_early),
+    z_stemshare_early             = scale(stemshare_early),
+    z_large_firms_early           = scale(large_firms_early),
+    z_information_intensity_early = scale(information_intensity_early),
+    z_manuf_intensity_early       = scale(manuf_intensity_early),
+    z_TurnOvrS_early              = scale(TurnOvrS_early)
+  )
+
+```
+
+```{r}
+m1 <- feols(d_ai ~ 
+               z_share_bac_early  + z_share_black_early + z_share_poverty_early +
+               z_logpop_early     + z_hpi_ch_early       + z_logincome_early +
+               z_tightness_early,
+             data = data2, cluster="COUNTY_FIPS")
+
+m2 <- feols(d_ai ~ 
+               z_pat_intensity_early + z_patai_intensity_early +
+               z_degshare_early     + z_stemshare_early,
+             data = data2, cluster="COUNTY_FIPS")
+
+m3 <- feols(d_ai ~ 
+               z_large_firms_early + z_information_intensity_early +
+               z_manuf_intensity_early + z_TurnOvrS_early,
+             data = data2, cluster="COUNTY_FIPS")
+
+m4 <- feols(d_ai ~ 
+               z_share_bac_early  + z_share_black_early + z_share_poverty_early +
+               z_logpop_early     + z_hpi_ch_early       + z_logincome_early +
+               z_tightness_early  + z_pat_intensity_early + z_patai_intensity_early +
+               z_degshare_early   + z_stemshare_early    + z_large_firms_early +
+               z_information_intensity_early + z_manuf_intensity_early + z_TurnOvrS_early,
+             data = data2, cluster="COUNTY_FIPS")
+
+m5 <- feols(d_ai ~ 
+               z_share_bac_early  + z_share_black_early + z_share_poverty_early +
+               z_logpop_early     + z_hpi_ch_early       + z_logincome_early +
+               z_tightness_early  + z_pat_intensity_early + z_patai_intensity_early +
+               z_degshare_early   + z_stemshare_early    + z_large_firms_early +
+               z_information_intensity_early + z_manuf_intensity_early + z_TurnOvrS_early
+             | state,
+             data = data2, cluster="COUNTY_FIPS")
+
+```
+
+```{r}
+coef_map <- c(
+  z_share_bac_early             = "Bachelors, % z-score in 2017",
+  z_share_black_early           = "Black, % z-score in 2017",
+  z_share_poverty_early         = "Poverty, % z-score in 2017",
+  z_logpop_early                = "Pop. Growth",
+  z_hpi_ch_early                = "House Price Growth, z-score",
+  z_logincome_early             = "Income, log z-score",
+  z_tightness_early             = "Tightness, z-score",
+  z_pat_intensity_early         = "Patents per emp., z-score",
+  z_patai_intensity_early       = "AI Patents’ Share, z-score",
+  z_degshare_early              = "Degrees per cap., z-score",
+  z_stemshare_early             = "STEM Degrees’ share, z-score",
+  z_large_firms_early           = "Large Estab., z-score",
+  z_information_intensity_early = "ICT Intensity, z-score",
+  z_manuf_intensity_early       = "Manufacturing Intensity, z-score",
+  z_TurnOvrS_early              = "Turnover Rate, z-score"
+)
+
+modelsummary(
+  list(
+    "Demographics" = m1,
+    "Innovation"   = m2,
+    "Industry"     = m3,
+    "All Controls" = m4,
+    "All + State FE"= m5
+  ),
+  coef_map  = coef_map,
+  stars     = TRUE,
+  statistic = "({std.error})",
+  gof_omit  = "IC|Log|Adj|RMSE",
+  title     = "Table 2: Change in AI Share (Pop ≥ 50K)",
+  output    = "kableExtra"
+) %>%
+  kable_styling(full_width=FALSE, position="center")
+
+```

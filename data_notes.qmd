@@ -1,0 +1,101 @@
+---
+title: "Data Notes & Top‑5 AI Counties"
+format:
+  html:
+    theme: cosmo
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+
+Slope County, North Dakota is by far the state’s least populous county, with just about 795 residents as of the 2023 American Community Survey five‑year estimate.
+
+Santa Clara County, CA
+Often thought of as the heart of Silicon Valley, Santa Clara County has roughly 1.94 million residents and an average AI job share of about 9.7%—nearly six times the national median. Its mature tech ecosystem, home to giants like Apple and Google, helps explain why AI skills are so heavily in demand here.
+
+Fairfax County, VA
+Just outside Washington, D.C., Fairfax County is another established innovation hub, with about 1.15 million people and an average AI share of 9.0%. A concentration of government contractors and federal research labs drives strong demand for AI and machine‑learning expertise
+
+Hughes County, SD
+By contrast, Hughes County is very rural—home to only around 17,500 people—yet it ranks fourth with an average AI share of 8.4%. This surprising result likely reflects the rise of remote‑friendly roles: even counties far from established tech centers can participate in AI work if infrastructure and broadband allow.
+
+Hudson County, NJ
+With roughly 710,000 residents packed into just 46 sq mi, Hudson County (across the river from Manhattan) sees an average AI share of 7.7%. Its dense, transit‑rich urban environment—anchored by Jersey City—supports a booming fintech and data‑services sector that increasingly relies on AI. 
+
+
+
+```{r}
+# packages
+library(tidyverse)
+library(readr)
+library(kableExtra)
+library(tigris)
+library(sf)
+options(tigris_use_cache = TRUE)
+
+```
+
+```{r}
+# 1) Load data
+df <- read_csv("data.csv", show_col_types = FALSE)
+
+# 2) Compute per‐county averages for 2018–2023
+county_summary <- df %>%
+  filter(Year %in% 2018:2023) %>%
+  group_by(COUNTY_FIPS) %>%
+  summarise(
+    avg_ai_share = mean(ai / nads, na.rm = TRUE) * 100,
+    avg_pop      = mean(pop,    na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 3) Filter to counties with average pop > 50 000 and take top 5 by AI share
+top5 <- county_summary %>%
+  filter(avg_pop > 50000) %>%
+  arrange(desc(avg_ai_share)) %>%
+  slice_head(n = 5) %>%
+  mutate(Rank = row_number())
+
+# 4) Pull county & state names from TIGER
+counties_meta <- counties(cb = TRUE, year = 2020, class = "sf") %>%
+  st_drop_geometry() %>%
+  transmute(
+    COUNTY_FIPS = GEOID,
+    County      = NAME,
+    state_fips  = STATEFP
+  )
+states_meta <- states(cb = TRUE, year = 2020, class = "sf") %>%
+  st_drop_geometry() %>%
+  transmute(
+    state_fips = STATEFP,
+    State      = STUSPS
+  )
+
+# 5) Join and label
+top5_named <- top5 %>%
+  mutate(COUNTY_FIPS = str_pad(as.character(COUNTY_FIPS), 5, pad = "0")) %>%
+  left_join(counties_meta, by = "COUNTY_FIPS") %>%
+  left_join(states_meta,   by = "state_fips") %>%
+  mutate(County = paste0(County, " County, ", State)) %>%
+  select(Rank, County, avg_pop, avg_ai_share)
+
+```
+
+```{r}
+top5_named %>%
+  transmute(
+    Rank,
+    County,
+    `Avg. Population` = scales::comma(avg_pop),
+    `Avg. AI Share (%)` = sprintf("%.2f", avg_ai_share)
+  ) %>%
+  kable(
+    format = "html",
+    col.names = c("Rank", "County, State", "Avg. Population", "Avg. AI Share (%)"),
+    align = "c"
+  ) %>%
+  kable_styling(full_width = FALSE, position = "center")
+
+```

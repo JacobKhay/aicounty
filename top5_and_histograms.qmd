@@ -1,0 +1,124 @@
+---
+title: "Top 5 AI‑Intense Counties & Predictor Histograms"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(tidyverse)
+library(readr)
+library(knitr)
+library(kableExtra)
+library(tigris)
+options(tigris_use_cache = TRUE)
+
+```
+
+```{r}
+# 1a. Compute each county’s average AI share over 2018–2023
+df_top5 <- read_csv("data.csv", show_col_types = FALSE) %>%
+  filter(Year %in% 2018:2023) %>%
+  mutate(ai_share = ai / nads) %>%
+  group_by(COUNTY_FIPS) %>%
+  summarize(avg_ai_share = mean(ai_share, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(avg_ai_share)) %>%
+  slice_head(n = 5) %>%
+  mutate(COUNTY_FIPS = str_pad(as.character(COUNTY_FIPS), 5, pad = "0"))
+
+# 1b. Get county names
+counties_sf <- suppressMessages(counties(cb = TRUE, year = 2020, class = "sf"))
+top5 <- df_top5 %>%
+  left_join(
+    transmute(counties_sf, COUNTY_FIPS = GEOID, County = paste0(NAME, ", ", STATEFP)),
+    by = "COUNTY_FIPS"
+  ) %>%
+  mutate(
+    Rank = row_number(),
+    `Avg AI Share (%)` = scales::percent(avg_ai_share, accuracy = 0.01)
+  ) %>%
+  select(Rank, County, `Avg AI Share (%)`)
+
+# 1c. Render nicely
+top5 %>%
+  kable(
+    caption = "Top 5 U.S. Counties by Average AI Job Share (2018–2023)",
+    align = c("l", "c", "c")
+  ) %>%
+  kable_styling(full_width = FALSE, position = "center")
+
+```
+
+```{r}
+raw23 <- read_csv("data.csv", show_col_types = FALSE) %>%
+  filter(Year == 2023) %>%
+  transmute(
+    share_bac,                                        # % bachelor’s
+    tightness = nads / Unemployed,                    # labor tightness
+    pat_intensity = n_inventors / Employed,           # patents/employee
+    stemshare = (ustemdeg + mstemdeg) / (udeg + mdeg),# STEM‐degree share
+    manuf_intensity = manuf_emp / emp                 # manufacturing intensity
+  ) %>%
+  drop_na()
+
+data_z <- raw23 %>%
+  mutate(across(everything(), ~ as.numeric(scale(.)), .names = "z_{col}"))
+
+```
+
+```{r}
+ggplot(data_z, aes(z_share_bac)) +
+  geom_histogram(binwidth = 0.25, fill = "#2c7fb8", color = "white") +
+  labs(
+    title = "Bachelor’s‑Degree Share (z‑score)",
+    x = "z‑score", y = "Number of Counties"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data_z, aes(z_tightness)) +
+  geom_histogram(binwidth = 0.25, fill = "#7fcdbb", color = "white") +
+  labs(
+    title = "Labor‑Market Tightness (z‑score)",
+    x = "z‑score", y = "Number of Counties"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data_z, aes(z_pat_intensity)) +
+  geom_histogram(binwidth = 0.25, fill = "#edf8b1", color = "white") +
+  labs(
+    title = "Patent Intensity (z‑score)",
+    x = "z‑score", y = "Number of Counties"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data_z, aes(z_stemshare)) +
+  geom_histogram(binwidth = 0.25, fill = "#feb24c", color = "white") +
+  labs(
+    title = "STEM‑Degree Share (z‑score)",
+    x = "z‑score", y = "Number of Counties"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data_z, aes(z_manuf_intensity)) +
+  geom_histogram(binwidth = 0.25, fill = "#f03b20", color = "white") +
+  labs(
+    title = "Manufacturing Intensity (z‑score)",
+    x = "z‑score", y = "Number of Counties"
+  ) +
+  theme_minimal()
+
+```

@@ -1,0 +1,106 @@
+---
+title: "Interactive AI Job Share Map"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(tidyverse)
+library(sf)
+library(leaflet)
+library(scales)
+library(tigris)
+```
+
+```{r}
+# Load & prepare data
+df <- read_csv("data.csv") %>%
+  filter(Year %in% c(2017, 2018, 2022, 2023)) %>%
+  mutate(
+    ai_intensity = ai / nads,
+    period = ifelse(Year %in% c(2017, 2018), "early", "late")
+  ) %>%
+  group_by(COUNTY_FIPS, period) %>%
+  summarise(ai_intensity = mean(ai_intensity, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = period, values_from = ai_intensity) %>%
+  mutate(
+    ai_change_pct = (late - early) * 100,
+    avg_ai_pct    = ((early + late) / 2) * 100
+  )
+
+# Pad FIPS codes
+df$COUNTY_FIPS <- str_pad(as.character(df$COUNTY_FIPS), 5, "left", "0")
+
+```
+
+```{r}
+# Cache & quietly load counties
+options(tigris_use_cache = TRUE)
+counties <- suppressMessages(
+  tigris::counties(cb = TRUE, year = 2020, class = "sf")
+) %>% 
+  mutate(COUNTY_FIPS = GEOID) %>% 
+  st_transform(4326)
+
+# Join with data
+map_data <- left_join(counties, df, by = "COUNTY_FIPS")
+
+```
+
+```{r}
+# Define percentage bins and matching colors
+bins_avg <- c(0, 0.06, 0.14, 0.23, 0.37, 0.71, 100)   # % breaks
+cols_avg <- c("#ffffcc","#ffeda0","#fed976","#fd8d3c","#e31a1c","#800026")
+
+bins_chg <- c(-10, -1, 0, 1, 2, 5, 100)               # pp breaks
+cols_chg <- c("#ffffcc","#ffeda0","#fed976","#fd8d3c","#fc4e2a","#800026")
+
+pal_avg <- colorBin(cols_avg, domain = map_data$avg_ai_pct, bins = bins_avg, na.color="gray90", right=FALSE)
+pal_chg <- colorBin(cols_chg, domain = map_data$ai_change_pct, bins = bins_chg, na.color="gray90", right=FALSE)
+
+```
+```{r}
+leaflet(map_data, options=leafletOptions(minZoom=4)) %>%
+  setView(-98.5795, 39.8283, zoom=4) %>%
+  addTiles() %>%
+  addPolygons(
+    fillColor  = ~pal_avg(avg_ai_pct),
+    weight     = 0.3, color="white", opacity=1, fillOpacity=0.7,
+    label      = ~paste0(NAME, ": ", round(avg_ai_pct,2), "%"),
+    group      = "AI Job Share (%)"
+  ) %>%
+  addLegend(
+    pal        = pal_avg, 
+    values     = ~avg_ai_pct, 
+    title      = "AI Job Share (%)", 
+    position   = "topright",
+    labFormat  = labelFormat(suffix="%")
+  ) %>%
+  addPolygons(
+    fillColor  = ~pal_chg(ai_change_pct),
+    weight     = 0.3, color="white", opacity=1, fillOpacity=0.7,
+    label      = ~paste0(NAME, ": ", round(ai_change_pct,2), " pp"),
+    group      = "Change in AI Share (pp)"
+  ) %>%
+  addLegend(
+    pal        = pal_chg, 
+    values     = ~ai_change_pct, 
+    title      = "Change in AI Share (pp)", 
+    position   = "bottomright",
+    labFormat  = labelFormat(suffix=" pp")
+  ) %>%
+  addLayersControl(
+    baseGroups = c("AI Job Share (%)","Change in AI Share (pp)"),
+    options    = layersControlOptions(collapsed=FALSE)
+  )
+
+```
+
+```{r}
+# Suppress any remaining download messages
+options(tigris_use_cache = TRUE)
+
+```

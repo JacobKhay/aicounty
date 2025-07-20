@@ -1,0 +1,70 @@
+---
+title: "Summary Statistics Table"
+format: html
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(janitor)
+library(gt)
+
+# Load data
+data_ai <- read_csv("data.csv")
+
+# Create summary stats
+summary_table <- data_ai %>%
+  select(where(is.numeric)) %>%
+  pivot_longer(cols = everything(), names_to = "variable") %>%
+  group_by(variable) %>%
+  summarise(
+    mean = mean(value, na.rm = TRUE),
+    sd   = sd(value, na.rm = TRUE),
+    min  = min(value, na.rm = TRUE),
+    max  = max(value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(variable) %>%
+  mutate(variable = case_when(
+    variable == "ai_patents"     ~ "AI Patents",
+    variable == "ai_inventors"   ~ "AI Inventors",
+    variable == "education_researchers" ~ "Education Researchers",
+    variable == "pop"            ~ "Population",
+    variable == "pop_above18"    ~ "Population Age 18+",
+    variable == "emp"            ~ "Total Employment",
+    variable == "unrate"         ~ "Unemployment Rate",
+    variable == "medhhincome"    ~ "Median Household Income ($)",
+    variable == "median_rent"    ~ "Median Rent ($)",
+    variable == "share_black"    ~ "Share Black",
+    variable == "share_bac"      ~ "Share Bachelor’s or Higher",
+    variable == "share_poverty"  ~ "Share Below Poverty Line",
+    variable == "hpi"            ~ "Housing Price Index",
+    variable == "hpi_ch"         ~ "Change in HPI (%)",
+    variable == "degshare"       ~ "Degree Share",
+    variable == "stemshare"      ~ "STEM Share",
+    variable == "TurnOvrS"       ~ "Turnover Share",
+    TRUE ~ variable
+  )) %>%
+  clean_names()
+
+# Format table
+summary_table %>%
+  gt() %>%
+  fmt_number(
+    columns = c(mean, sd, min, max),
+    decimals = 2,
+    use_seps = TRUE
+  ) %>%
+  tab_header(
+    title = "Table 1: Summary Statistics",
+    subtitle = "County-Level Indicators from 2014–2023"
+  ) %>%
+  tab_source_note(
+    source_note = "Source: AI County Dataset"
+  )
+
+
+```

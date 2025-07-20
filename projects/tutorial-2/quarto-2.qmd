@@ -1,0 +1,20 @@
+---
+title: "My Second Quarto Document"
+format: html
+---
+
+
+
+```{r}
+#| message: false
+#| echo: false
+#| label: setup
+library(tidyverse)
+```
+
+```{r}
+ggplot(data = iris,
+       mapping = aes(x = Sepal.Width,
+                     y = Sepal.Length,
+                     color = Species)) + geom_point() + labs(title = "Measurements for Different Species of Iris", subtitle = "Virgincia has the longest sepals", caption = "Fisher (1936)")
+```
