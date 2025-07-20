@@ -1,7 +1,0 @@
-## My Header
-You can do a lot of cool things in Quarto like **bold** and *italic* text.
-
----
-title: "My First Quatro Document"
-formalist.files()list.files()t: html
----
